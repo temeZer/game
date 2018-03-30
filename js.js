@@ -16,30 +16,65 @@ let player = {
 	xSpeed: 0,
 	ySpeed: 0,
 }
+
+
+let textures = {
+	brick: "images/brick.png",
+	pause: "images/pause.png",
+	player: "images/player.png",
+}
+
+;(function() { //loads textures and starts draw() after that
+	let loadCount = 0
+	let texturesList = Object.getOwnPropertyNames(textures)
+	for (var i = 0; i < texturesList.length; i++) {
+		let name = texturesList[i]
+		let src = textures[name]
+
+		textures[name] = new Image()
+		textures[name].src = src
+	
+		textures[name].onload = function() {
+			loadCount++
+			if(loadCount == texturesList.length){
+				draw()
+			}
+		}
+	}
+})()
+
 let solidObjects = [
 	{
-		x:0,
-		y: 800,
-		xEnd: 1920,
-		yEnd: 825,
-		color: "#f00"
+		type: "rectangle",
+		start: [0, 800],
+		end: [1920, 825],
+		color: "#f00",
 	},
 	{
-		x:0,
-		y: 0,
-		xEnd: 30,
-		yEnd: 30,
-		color: "#00f"
-	}
-
-
+		type: "rectangle",
+		start: [0, 0],
+		end: [30, 30],
+		color: "#00f",
+	},
+	{
+		type: "image",
+		start: [0, 800],
+		size: [60, 60],
+		texture: textures.brick,
+	},
+	{
+		type: "image",
+		start: [60, 800],
+		size: [60, 60],
+		texture: textures.brick,
+	},
+	{
+		type: "image",
+		start: [120, 800],
+		size: [60, 60],
+		texture: textures.brick,
+	},
 ]
-let textures = {
-	pause: new Image(),
-	player: new Image(),
-}
-textures.pause.src = "images/pause.png"
-textures.player.src = "images/player.png"
 
 var getKeyAction = (keyCode) => { //returns what action the keyCode represents
 	let binds = {
@@ -108,21 +143,23 @@ function draw(){
 	}
 }
 
-textures.player.onload = function() {
-	draw()
-}
-
 function drawObjects() {
 	for (var i = 0; i < solidObjects.length; i++) {
 		var object = solidObjects[i]
-		c.beginPath();
-		c.moveTo(object.x, object.y)
-		c.lineTo(object.xEnd, object.y)
-		c.lineTo(object.xEnd, object.yEnd)
-		c.lineTo(object.x, object.yEnd)
-		c.lineTo(object.x, object.y)
-		c.fillStyle = object.color
-		c.fill()
+
+		if (object.type == "image") {
+			c.imageSmoothingEnabled = false
+			c.drawImage(object.texture, object.start[0], object.start[1], object.size[0], object.size[1])
+		} else if (object.type == "rectangle") {
+			c.beginPath();
+			c.moveTo(object.start[0], object.start[1])
+			c.lineTo(object.end[0], object.start[1])
+			c.lineTo(object.end[0], object.end[1])
+			c.lineTo(object.start[0], object.end[1])
+			c.lineTo(object.start[0], object.start[1])
+			c.fillStyle = object.color
+			c.fill()
+		}
 	}
 	//c.stroke()
 }
