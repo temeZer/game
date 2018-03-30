@@ -11,10 +11,19 @@ let gameRunning = true
 let pressedButtons = []
 let activeActions = []
 let player = {
+	width: 100,
+	height: 250,
 	x: 500,
 	y: 500,
 	xSpeed: 0,
 	ySpeed: 0,
+	onFloor: false,
+	maxVelocity: 10,
+}
+const gameProperties = {
+	acceleration: function(x) {
+		return x * x 
+	}
 }
 
 
@@ -24,7 +33,9 @@ let textures = {
 	player: "images/player.png",
 }
 
-;(function() { //loads textures and starts draw() after that
+
+//loads textures and starts draw() after that
+;(function() {
 	let loadCount = 0
 	let texturesList = Object.getOwnPropertyNames(textures)
 	for (var i = 0; i < texturesList.length; i++) {
@@ -47,18 +58,18 @@ let solidObjects = [
 	{
 		type: "rectangle",
 		start: [0, 800],
-		end: [1920, 825],
+		size: [1920, 25],
 		color: "#f00",
 	},
 	{
 		type: "rectangle",
 		start: [0, 0],
-		end: [30, 30],
+		size: [30, 30],
 		color: "#00f",
 	},
 	{
 		type: "image",
-		start: [0, 800],
+		start: [0, 500],
 		size: [60, 60],
 		texture: textures.brick,
 	},
@@ -76,13 +87,16 @@ let solidObjects = [
 	},
 ]
 
-var getKeyAction = (keyCode) => { //returns what action the keyCode represents
+
+//returns what action the keyCode represents
+var getKeyAction = (keyCode) => {
 	let binds = {
 		up: [87, 38],
 		down: [83, 40],
 		right: [68, 39],
 		left: [65, 37],
-		pause: [27]
+		pause: [27],
+		space: [32],
 	}
 	let listOfActions = Object.getOwnPropertyNames(binds)
 	for (let i = 0; i < listOfActions.length; i++) {
@@ -129,7 +143,7 @@ function draw(){
 	c.clearRect(0, 0, canvas.width, canvas.height)
 
 	c.imageSmoothingEnabled = false
-	c.drawImage(textures.player, player.x, player.y, 100, 200)
+	c.drawImage(textures.player, player.x, player.y, player.width, player.height)
 
 	drawObjects()
 
@@ -153,9 +167,9 @@ function drawObjects() {
 		} else if (object.type == "rectangle") {
 			c.beginPath();
 			c.moveTo(object.start[0], object.start[1])
-			c.lineTo(object.end[0], object.start[1])
-			c.lineTo(object.end[0], object.end[1])
-			c.lineTo(object.start[0], object.end[1])
+			c.lineTo(object.start[0], object.start[1] + object.size[1])
+			c.lineTo(object.start[0] + object.size[0], object.start[1] + object.size[1])
+			c.lineTo(object.start[0] + object.size[0], object.start[1])
 			c.lineTo(object.start[0], object.start[1])
 			c.fillStyle = object.color
 			c.fill()
@@ -209,7 +223,50 @@ function movePlayer() {
 		player.ySpeed = 0
 	}
 
+	/*if (!player.onFloor) {
+		player.ySpeed += 1
+	}*/
+
+	//for (var i )
+
+	if (activeActions.indexOf("space") != -1) {
+		checkCollision([player.x, player.y], [player.x + player.xSpeed, player.y + player.ySpeed])
+	}
 
 	player.x += player.xSpeed
 	player.y += player.ySpeed
+}
+
+function checkCollision(oldPos, newPos) {
+	let minPos = oldPos
+	let maxPos = newPos
+	if (minPos[0] > maxPos[0]) {
+		let max = minPos[0]
+		minPos[0] = maxPos[0]
+		maxPos[0] = max 
+	}
+	if (minPos[1] > maxPos[1]) {
+		let max = minPos[1]
+		minPos[1] = maxPos[1]
+		maxPos[1] = max 
+	}
+	maxPos[0] += player.width
+	maxPos[1] += player.height
+
+	let collisions = []
+
+	for (var i = 0; i < solidObjects.length; i++) {
+		if(minPos[0] < solidObjects[i].start[0] || minPos[0] < solidObjects[i].start[0] + solidObjects[i].size[0]) {
+		if(maxPos[0] > solidObjects[i].start[0] || maxPos[0] > solidObjects[i].start[0] + solidObjects[i].size[0]) {
+		if(minPos[1] < solidObjects[i].start[1] || minPos[1] < solidObjects[i].start[1] + solidObjects[i].size[1]) {
+		if(maxPos[1] > solidObjects[i].start[1] || maxPos[1] > solidObjects[i].start[1] + solidObjects[i].size[1]) {
+			collisions.push(i)
+		}
+		}
+		}
+		}
+	}
+	if(collisions.length) {
+		console.log(collisions)
+	}
 }
