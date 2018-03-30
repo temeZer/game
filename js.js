@@ -5,6 +5,8 @@ var width = window.innerWidth
 canvas.height = height
 canvas.width = width
 
+canvas.addEventListener('contextmenu', event => event.preventDefault());
+
 let gameRunning = true
 let pressedButtons = []
 let activeActions = []
@@ -47,7 +49,6 @@ var getKeyAction = (keyCode) => { //returns what action the keyCode represents
 		left: [65, 37],
 		pause: [27]
 	}
-
 	let listOfActions = Object.getOwnPropertyNames(binds)
 	for (let i = 0; i < listOfActions.length; i++) {
 
