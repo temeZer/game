@@ -276,7 +276,7 @@ function test(oldPos, newPos, list) {
 	//let oldPos = [player.x, player.y]
 	//let newPos = [player.x + player.xSpeed, player.y + player.ySpeed]
 
-	let xDirection
+	let xDirection	
 	let yDirection
 	if (player.xSpeed > 0) {
 		xDirection = 1 
@@ -298,32 +298,36 @@ function test(oldPos, newPos, list) {
 		yDirection = 1
 	}
 
-	let startCorner
-	let endCorner
 	let leftLine
 	let rightLine
+	let xCollisionLine
+	let yCollisionLine
+
+	if (xDirection) {
+		xCollisionLine = [[player.width, 0], [player.width, player.height]]
+	} else {
+		xCollisionLine = [[0, 0], [0, player.height]]
+	}
+	if (yDirection) {
+		yCollisionLine = [[0, player.height], [player.width, player.height]]
+	} else {
+		yCollisionLine = [[0, 0], [player.width, 0]]
+	}
+
 
 	if (xDirection && yDirection) {
-		startCorner = oldPos
-		endCorner = [newPos[0] + player.width, newPos[1] + player.height ]
-		leftLine = [[startCorner[0], startCorner[1] + player.height], [newPos[0], newPos[1] + player.height]]
-		rightLine = [[startCorner[0] + player.width, startCorner[1]], [newPos[0] + player.width, newPos[1]]]
+		leftLine = [[oldPos[0], oldPos[1] + player.height], [newPos[0], newPos[1] + player.height]]
+		rightLine = [[oldPos[0] + player.width, oldPos[1]], [newPos[0] + player.width, newPos[1]]]
 
 	} else if (xDirection && !yDirection) {
-		startCorner = [oldPos[0], oldPos[1]  + player.height]
-		endCorner = [newPos[0] + player.width, newPos[1]]
 		leftLine = [oldPos, newPos]
 		rightLine = [[oldPos[0] + player.width, oldPos[1] + player.height], [newPos[0] + player.width, newPos[1] + player.height]]
 
 	} else if (!xDirection && !yDirection) {
-		startCorner = [oldPos[0] + player.width, oldPos[1] + player.height]
-		endCorner = newPos
 		leftLine = [[oldPos[0], oldPos[1] + player.height], [newPos[0], newPos[1] + player.height]]
 		rightLine = [[oldPos[0] + player.width, oldPos[1]], [newPos[0] + player.width, newPos[1]]]
 
 	} else {
-		startCorner = [oldPos[0] + player.width, oldPos[1]]
-		endCorner = [newPos[0], newPos[1] + player.height]
 		leftLine = [[oldPos[0] + player.width, oldPos[1] + player.height], [newPos[0] + player.width, newPos[1] + player.height]]
 		rightLine = [oldPos, newPos]
 
@@ -362,6 +366,21 @@ function test(oldPos, newPos, list) {
 	c.fillStyle = "red"
 	c.fill()*/
 
+	c.strokeStyle = "#f00"
+
+
+	c.beginPath()
+	c.moveTo(oldPos[0] + xCollisionLine[0][0], oldPos[1] + xCollisionLine[0][1])
+	c.lineTo(oldPos[0] + xCollisionLine[1][0], oldPos[1] + xCollisionLine[1][1])
+	c.stroke()
+
+	c.beginPath()
+	c.moveTo(oldPos[0] + yCollisionLine[0][0], oldPos[1] + yCollisionLine[0][1])
+	c.lineTo(oldPos[0] + yCollisionLine[1][0], oldPos[1] + yCollisionLine[1][1])
+	c.stroke()
+
+	c.strokeStyle = "#000"
+
 	c.beginPath()
 	c.moveTo(leftLine[0][0], leftLine[0][1])
 	c.lineTo(leftLine[1][0], leftLine[1][1])
@@ -375,4 +394,4 @@ function test(oldPos, newPos, list) {
 
 
 
-test([10, 10], [300, 300])
+test([10, 1000], [300, 300])
