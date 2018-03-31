@@ -48,7 +48,7 @@ let textures = {
 		textures[name].onload = function() {
 			loadCount++
 			if(loadCount == texturesList.length){
-				draw()
+				//draw()
 			}
 		}
 	}
@@ -230,16 +230,16 @@ function movePlayer() {
 	//for (var i )
 
 	if (activeActions.indexOf("space") != -1) {
-		checkCollision([player.x, player.y], [player.x + player.xSpeed, player.y + player.ySpeed])
+		checkCollision()
 	}
 
 	player.x += player.xSpeed
 	player.y += player.ySpeed
 }
 
-function checkCollision(oldPos, newPos) {
-	let minPos = oldPos
-	let maxPos = newPos
+function checkCollision() {
+	let minPos = [player.x, player.y]
+	let maxPos = [player.x + player.xSpeed, player.y + player.ySpeed]
 	if (minPos[0] > maxPos[0]) {
 		let max = minPos[0]
 		minPos[0] = maxPos[0]
@@ -270,3 +270,109 @@ function checkCollision(oldPos, newPos) {
 		console.log(collisions)
 	}
 }
+
+function test(oldPos, newPos, list) {
+
+	//let oldPos = [player.x, player.y]
+	//let newPos = [player.x + player.xSpeed, player.y + player.ySpeed]
+
+	let xDirection
+	let yDirection
+	if (player.xSpeed > 0) {
+		xDirection = 1 
+	} else {
+		xDirection = 0
+	}
+	if (player.ySpeed > 0) {
+		yDirection = 1 
+	} else {
+		yDirection = 0
+	}
+
+	xDirection = 0
+	yDirection = 0
+	if(oldPos[0] < newPos[0]) {
+		xDirection = 1
+	}
+	if(oldPos[1] < newPos[1]) {
+		yDirection = 1
+	}
+
+	let startCorner
+	let endCorner
+	let leftLine
+	let rightLine
+
+	if (xDirection && yDirection) {
+		startCorner = oldPos
+		endCorner = [newPos[0] + player.width, newPos[1] + player.height ]
+		leftLine = [[startCorner[0], startCorner[1] + player.height], [newPos[0], newPos[1] + player.height]]
+		rightLine = [[startCorner[0] + player.width, startCorner[1]], [newPos[0] + player.width, newPos[1]]]
+
+	} else if (xDirection && !yDirection) {
+		startCorner = [oldPos[0], oldPos[1]  + player.height]
+		endCorner = [newPos[0] + player.width, newPos[1]]
+		leftLine = [oldPos, newPos]
+		rightLine = [[oldPos[0] + player.width, oldPos[1] + player.height], [newPos[0] + player.width, newPos[1] + player.height]]
+
+	} else if (!xDirection && !yDirection) {
+		startCorner = [oldPos[0] + player.width, oldPos[1] + player.height]
+		endCorner = newPos
+		leftLine = [[oldPos[0], oldPos[1] + player.height], [newPos[0], newPos[1] + player.height]]
+		rightLine = [[oldPos[0] + player.width, oldPos[1]], [newPos[0] + player.width, newPos[1]]]
+
+	} else {
+		startCorner = [oldPos[0] + player.width, oldPos[1]]
+		endCorner = [newPos[0], newPos[1] + player.height]
+		leftLine = [[oldPos[0] + player.width, oldPos[1] + player.height], [newPos[0] + player.width, newPos[1] + player.height]]
+		rightLine = [oldPos, newPos]
+
+	}
+
+	c.beginPath()
+	c.rect(newPos[0] + .5 * (oldPos[0] - newPos[0]), newPos[1] + .5 * (oldPos[1] - newPos[1]), player.width, player.height)
+	c.strokeStyle = "#0f0"
+	c.stroke()
+
+	c.strokeStyle = "#000"
+
+	c.beginPath()
+	c.rect(oldPos[0], oldPos[1], player.width, player.height)
+	c.stroke()
+
+	c.beginPath()
+	c.rect(newPos[0], newPos[1], player.width, player.height)
+	c.stroke()
+
+	c.beginPath()
+	c.rect(oldPos[0] - 5, oldPos[1] - 5, 10, 10)
+	c.fill()
+
+	c.beginPath()
+	c.rect(newPos[0] - 5, newPos[1] - 5, 10, 10)
+	c.fillStyle = "red"
+	c.fill()
+
+	/*c.beginPath()
+	c.rect(startCorner[0] - 5, startCorner[1] - 5, 10, 10)
+	c.fill()
+
+	c.beginPath()
+	c.rect(endCorner[0] - 5, endCorner[1] - 5, 10, 10)
+	c.fillStyle = "red"
+	c.fill()*/
+
+	c.beginPath()
+	c.moveTo(leftLine[0][0], leftLine[0][1])
+	c.lineTo(leftLine[1][0], leftLine[1][1])
+	c.stroke()
+
+	c.beginPath()
+	c.moveTo(rightLine[0][0], rightLine[0][1])
+	c.lineTo(rightLine[1][0], rightLine[1][1])
+	c.stroke()
+}
+
+
+
+test([10, 10], [300, 300])
