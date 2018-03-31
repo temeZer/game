@@ -357,15 +357,6 @@ function test(oldPos, newPos, list) {
 	c.fillStyle = "red"
 	c.fill()
 
-	/*c.beginPath()
-	c.rect(startCorner[0] - 5, startCorner[1] - 5, 10, 10)
-	c.fill()
-
-	c.beginPath()
-	c.rect(endCorner[0] - 5, endCorner[1] - 5, 10, 10)
-	c.fillStyle = "red"
-	c.fill()*/
-
 	c.strokeStyle = "#f00"
 
 
@@ -394,4 +385,8 @@ function test(oldPos, newPos, list) {
 
 
 
-test([10, 1000], [300, 300])
+test([10, 1000], [300, 300],
+	[
+	[[500, 100],[50,50]],
+	]
+)
