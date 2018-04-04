@@ -273,6 +273,7 @@ function nearCollision() { //finds all objects that could be in the way
 }
 
 function checkCollision(oldPos, newPos, list) {
+	//lines are expressed with the following syntax: [[x-starting point, y-starting point], [x-ending point, y-ending point]]
 
 	//let oldPos = [player.x, player.y]
 	//let newPos = [player.x + player.xSpeed, player.y + player.ySpeed]
@@ -381,14 +382,13 @@ function checkCollision(oldPos, newPos, list) {
 	let yMultiplier
 	let finalMultiplier = false
 
-	console.log(xCollisionLine)
 
-	while (xObjectCollisionList.length != 0 && yObjectCollisionList.length != 0 && !finalMultiplier) {
+	while (xObjectCollisionList.length != 0 && yObjectCollisionList.length != 0 && finalMultiplier === false) {
 		xMultiplier = Math.abs((xObjectCollisionList[0][0][0] - xCollisionLine[0][0])/(xDistance))
 		yMultiplier = Math.abs((yObjectCollisionList[0][0][1] - yCollisionLine[0][1])/(yDistance))
 
 		if (xMultiplier < yMultiplier) {
-			let tempXCollisionLine = [[xObjectCollisionList[0][0][0], xCollisionLine[0][1] + (yDistance * xMultiplier)], [xObjectCollisionList[0][0][0], xCollisionLine[1][1]  + (yDistance * xMultiplier)]] //wrong line?
+			let tempXCollisionLine = [[xObjectCollisionList[0][0][0], xCollisionLine[0][1] + (yDistance * xMultiplier)], [xObjectCollisionList[0][0][0], xCollisionLine[1][1]  + (yDistance * xMultiplier)]]
 			console.log(tempXCollisionLine, xObjectCollisionList[0], "x")
 			if (xObjectCollisionList[0][0][1] <= tempXCollisionLine[0][1] && xObjectCollisionList[0][1][1] >= tempXCollisionLine[1][1]
 				||
@@ -396,6 +396,7 @@ function checkCollision(oldPos, newPos, list) {
 				||
 				xObjectCollisionList[0][1][1] > tempXCollisionLine[0][1] && xObjectCollisionList[0][1][1] < tempXCollisionLine[1][1]) {
 				finalMultiplier = xMultiplier
+				player.xSpeed = 0
 				console.log ("finalMultiplier is x", finalMultiplier)
 			} else {
 				xObjectCollisionList.shift()
@@ -409,6 +410,7 @@ function checkCollision(oldPos, newPos, list) {
 				||
 				yObjectCollisionList[0][1][0] > tempYCollisionLine[0][0] && yObjectCollisionList[0][1][0] < tempYCollisionLine[1][0]) {
 				finalMultiplier = yMultiplier
+				player.ySpeed = 0
 				console.log ("finalMultiplier is y", finalMultiplier)
 			} else {
 				yObjectCollisionList.shift()
@@ -534,6 +536,10 @@ function checkCollision(oldPos, newPos, list) {
 
 checkCollision([10, 10], [500, 500],
 	[
+		[
+			[110, 10],
+			[150, 300]
+		],
 		[
 			[50, 500],
 			[150,50]
