@@ -178,7 +178,7 @@ function drawObjects() {
 	//c.stroke()
 }
 
-function movePlayer() {
+function movePlayer() { //changes the player position according to it's speed and accelerates/deaccelerates the speed if direction buttons are/aren't pressed
 	if (activeActions.indexOf("right") != -1) {
 		if (activeActions.indexOf("left") != -1) {
 			player.xSpeed = 0
@@ -230,14 +230,15 @@ function movePlayer() {
 	//for (var i )
 
 	if (activeActions.indexOf("space") != -1) {
-		checkCollision()
+		nearCollision()
 	}
 
 	player.x += player.xSpeed
 	player.y += player.ySpeed
 }
 
-function checkCollision() {
+
+function nearCollision() { //finds all objects that could be in the way
 	let minPos = [player.x, player.y]
 	let maxPos = [player.x + player.xSpeed, player.y + player.ySpeed]
 	if (minPos[0] > maxPos[0]) {
@@ -271,7 +272,7 @@ function checkCollision() {
 	}
 }
 
-function test(oldPos, newPos, list) {
+function checkCollision(oldPos, newPos, list) {
 
 	//let oldPos = [player.x, player.y]
 	//let newPos = [player.x + player.xSpeed, player.y + player.ySpeed]
@@ -298,22 +299,161 @@ function test(oldPos, newPos, list) {
 		yDirection = 1
 	}
 
-	let leftLine
-	let rightLine
+	//the sides of the player that are can posibbly collide
 	let xCollisionLine
 	let yCollisionLine
 
 	if (xDirection) {
-		xCollisionLine = [[player.width, 0], [player.width, player.height]]
+		xCollisionLine = [[oldPos[0] + player.width, oldPos[1]], [oldPos[0] + player.width, oldPos[1] + player.height]]
 	} else {
-		xCollisionLine = [[0, 0], [0, player.height]]
+		xCollisionLine = [[oldPos[0], oldPos[1]], [oldPos[0], oldPos[1] + player.height]]
 	}
 	if (yDirection) {
-		yCollisionLine = [[0, player.height], [player.width, player.height]]
+		yCollisionLine = [[oldPos[0], oldPos[1] + player.height], [oldPos[0] + player.width, oldPos[1] + player.height]]
 	} else {
-		yCollisionLine = [[0, 0], [player.width, 0]]
+		yCollisionLine = [[oldPos[0], oldPos[1]], [oldPos[0] + player.width, oldPos[1]]]
 	}
 
+	//the sides of the objects that are can posibbly collide
+	let xObjectCollisionList = []
+	let yObjectCollisionList = []
+	
+	for (var i = 0; i < list.length; i++) {
+		if (xDirection) {
+			xObjectCollisionList.push([[list[i][0][0], list[i][0][1]], [list[i][0][0], list[i][0][1] + list[i][1][1]]])
+		} else {
+			xObjectCollisionList.push([[list[i][0][0] + list[i][1][0], list[i][0][1]], [list[i][0][0] + list[i][1][0], list[i][0][1] + list[i][1][1]]])
+		}
+
+		if (yDirection) {
+			yObjectCollisionList.push([[list[i][0][0], list[i][0][1]], [list[i][0][0] + list[i][1][0], list[i][0][1]]])
+		} else {
+			yObjectCollisionList.push([[list[i][0][0], list[i][0][1] + list[i][1][1]], [list[i][0][0] + list[i][1][0], list[i][0][1] + list[i][1][1]]])
+		}
+	}
+
+	for (var i = 0; i < xObjectCollisionList.length; i++) {
+		if (xDirection) {
+			if (xCollisionLine[0][0] > xObjectCollisionList[i][0][0]) {
+				xObjectCollisionList.splice(i, 1)
+				i--
+			}
+		} else {
+			if (xCollisionLine[0][0] < xObjectCollisionList[i][0][0]) {
+				xObjectCollisionList.splice(i, 1)
+				i--
+			}
+		}
+	}
+	for (var i = 0; i < yObjectCollisionList.length; i++) {
+		if (yDirection) {
+			if (yCollisionLine[0][1] > yObjectCollisionList[i][0][1]) {
+				yObjectCollisionList.splice(i, 1)
+				i--
+			}
+		} else {
+			if (yCollisionLine[0][1] < yObjectCollisionList[i][0][1]) {
+				yObjectCollisionList.splice(i, 1)
+				i--
+			}
+		}
+	}
+
+	xObjectCollisionList.sort(function(a, b) {
+		if (xDirection) {
+			return a[0][0] - b[0][0]
+		} else {
+			return b[0][0] - a[0][0]
+		}
+	})
+	yObjectCollisionList.sort(function(a, b) {
+		if (yDirection) {
+			return a[0][1] - b[0][1]
+		} else {
+			return b[0][1] - a[0][1]
+		}
+	})
+
+	let xDistance = (newPos[0] - oldPos[0])
+	let yDistance = (newPos[1] - oldPos[1])
+
+	let xMultiplier
+	let yMultiplier
+	let finalMultiplier = false
+
+	console.log(xCollisionLine)
+
+	while (xObjectCollisionList.length != 0 && yObjectCollisionList.length != 0 && !finalMultiplier) {
+		xMultiplier = Math.abs((xObjectCollisionList[0][0][0] - xCollisionLine[0][0])/(xDistance))
+		yMultiplier = Math.abs((yObjectCollisionList[0][0][1] - yCollisionLine[0][1])/(yDistance))
+
+		if (xMultiplier < yMultiplier) {
+			let tempXCollisionLine = [[xObjectCollisionList[0][0][0], xCollisionLine[0][1] + (yDistance * xMultiplier)], [xObjectCollisionList[0][0][0], xCollisionLine[1][1]  + (yDistance * xMultiplier)]] //wrong line?
+			console.log(tempXCollisionLine, xObjectCollisionList[0], "x")
+			if (xObjectCollisionList[0][0][1] <= tempXCollisionLine[0][1] && xObjectCollisionList[0][1][1] >= tempXCollisionLine[1][1]
+				||
+				xObjectCollisionList[0][0][1] > tempXCollisionLine[0][1] && xObjectCollisionList[0][0][1] < tempXCollisionLine[1][1]
+				||
+				xObjectCollisionList[0][1][1] > tempXCollisionLine[0][1] && xObjectCollisionList[0][1][1] < tempXCollisionLine[1][1]) {
+				finalMultiplier = xMultiplier
+				console.log ("finalMultiplier is x", finalMultiplier)
+			} else {
+				xObjectCollisionList.shift()
+			}
+		} else if (xMultiplier > yMultiplier) {
+			let tempYCollisionLine = [[yCollisionLine[0][0] + (xDistance * yMultiplier), yObjectCollisionList[0][0][1]], [yCollisionLine[1][0] + (xDistance * yMultiplier), yObjectCollisionList[0][0][1]]]
+			console.log(tempYCollisionLine, yObjectCollisionList[0], "y")
+			if (yObjectCollisionList[0][0][0] <= tempYCollisionLine[0][0] && yObjectCollisionList[0][1][0] >= tempYCollisionLine[1][0]
+				||
+				yObjectCollisionList[0][0][0] > tempYCollisionLine[0][0] && yObjectCollisionList[0][0][0] < tempYCollisionLine[1][0]
+				||
+				yObjectCollisionList[0][1][0] > tempYCollisionLine[0][0] && yObjectCollisionList[0][1][0] < tempYCollisionLine[1][0]) {
+				finalMultiplier = yMultiplier
+				console.log ("finalMultiplier is y", finalMultiplier)
+			} else {
+				yObjectCollisionList.shift()
+			}
+		}
+	}
+
+	if (!finalMultiplier) {
+		finalMultiplier = 1
+	}
+
+
+
+
+	//test stuff start
+
+	c.beginPath()
+	c.rect(oldPos[0] + finalMultiplier * (xDistance), oldPos[1] + finalMultiplier * (yDistance), player.width, player.height)
+	c.fillStyle = "#f0f"
+	c.fill()
+
+
+	c.strokeStyle = "#000"
+	for (var i = 0; i < list.length; i++) {
+		c.beginPath()
+		c.rect(list[i][0][0], list[i][0][1], list[i][1][0], list[i][1][1])
+		c.stroke()
+	}
+
+	c.strokeStyle = "#f00"
+	for (var i = 0; i < xObjectCollisionList.length; i++) {
+		c.beginPath()
+		c.moveTo(xObjectCollisionList[i][0][0], xObjectCollisionList[i][0][1])
+		c.lineTo(xObjectCollisionList[i][1][0], xObjectCollisionList[i][1][1])
+		c.stroke()
+	}
+	for (var i = 0; i < yObjectCollisionList.length; i++) {
+		c.beginPath()
+		c.moveTo(yObjectCollisionList[i][0][0], yObjectCollisionList[i][0][1])
+		c.lineTo(yObjectCollisionList[i][1][0], yObjectCollisionList [i][1][1])
+		c.stroke()
+	}
+
+	let leftLine
+	let rightLine
 
 	if (xDirection && yDirection) {
 		leftLine = [[oldPos[0], oldPos[1] + player.height], [newPos[0], newPos[1] + player.height]]
@@ -333,9 +473,15 @@ function test(oldPos, newPos, list) {
 
 	}
 
+
 	c.beginPath()
-	c.rect(newPos[0] + .5 * (oldPos[0] - newPos[0]), newPos[1] + .5 * (oldPos[1] - newPos[1]), player.width, player.height)
+	c.rect(oldPos[0] + xMultiplier * (xDistance), oldPos[1] + xMultiplier * (yDistance), player.width, player.height)
 	c.strokeStyle = "#0f0"
+	c.stroke()
+
+	c.beginPath()
+	c.rect(oldPos[0] + yMultiplier * (xDistance), oldPos[1] + yMultiplier * (yDistance), player.width, player.height)
+	c.strokeStyle = "#00f"
 	c.stroke()
 
 	c.strokeStyle = "#000"
@@ -361,13 +507,13 @@ function test(oldPos, newPos, list) {
 
 
 	c.beginPath()
-	c.moveTo(oldPos[0] + xCollisionLine[0][0], oldPos[1] + xCollisionLine[0][1])
-	c.lineTo(oldPos[0] + xCollisionLine[1][0], oldPos[1] + xCollisionLine[1][1])
+	c.moveTo(xCollisionLine[0][0], xCollisionLine[0][1])
+	c.lineTo(xCollisionLine[1][0], xCollisionLine[1][1])
 	c.stroke()
 
 	c.beginPath()
-	c.moveTo(oldPos[0] + yCollisionLine[0][0], oldPos[1] + yCollisionLine[0][1])
-	c.lineTo(oldPos[0] + yCollisionLine[1][0], oldPos[1] + yCollisionLine[1][1])
+	c.moveTo(yCollisionLine[0][0], yCollisionLine[0][1])
+	c.lineTo(yCollisionLine[1][0], yCollisionLine[1][1])
 	c.stroke()
 
 	c.strokeStyle = "#000"
@@ -381,12 +527,24 @@ function test(oldPos, newPos, list) {
 	c.moveTo(rightLine[0][0], rightLine[0][1])
 	c.lineTo(rightLine[1][0], rightLine[1][1])
 	c.stroke()
+	//test stuff end
 }
 
 
 
-test([10, 1000], [300, 300],
+checkCollision([10, 10], [500, 500],
 	[
-	[[500, 100],[50,50]],
+		[
+			[50, 500],
+			[150,50]
+		],
+		[
+			[370, 200],
+			[100, 75]
+		],
+		[
+			[250, 800],
+			[50,250]
+		],
 	]
 )
