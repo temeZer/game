@@ -404,7 +404,7 @@ function checkCollision(list) {
 	/*if(yObjectCollisionList.length) {
 		console.log(yObjectCollisionList)
 	}*/
-
+		
 	while ((xObjectCollisionList.length != 0 || yObjectCollisionList.length != 0) && finalMultiplier === false ) {
 		if (xObjectCollisionList.length) {
 			xMultiplier = Math.abs((xObjectCollisionList[0][0][0] - xCollisionLine[0][0])/(xDistance))
@@ -450,18 +450,21 @@ function checkCollision(list) {
 		}
 
 		if (isNaN(xMultiplier)) {
-			console.log(xObjectCollisionList[0][0][0], xCollisionLine[0][0], xDistance)
+			//console.log(xObjectCollisionList[0][0][0], xCollisionLine[0][0], xDistance)
+			finalMultiplier = yMultiplier
 		}
 
 		if (isNaN(yMultiplier)) {
-			console.log(yObjectCollisionList[0][0][1], yCollisionLine[0][1], yDistance)
+			//console.log(yObjectCollisionList[0][0][1], yCollisionLine[0][1], yDistance)
+			finalMultiplier = xMultiplier
 		}
 
-		
+		/*
 		console.log("length", xObjectCollisionList.length, yObjectCollisionList.length)
 		console.log("dist", xDistance, yDistance)
 		console.log("mult", xMultiplier, yMultiplier)
 		console.log("speed", player.xSpeed, player.ySpeed)
+		*/
 	}
 
 	if (!finalMultiplier) {
