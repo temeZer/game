@@ -207,7 +207,22 @@ function movePlayer() { //changes the player position according to it's speed an
 		player.xSpeed = 0
 	}
 
-	if (activeActions.indexOf("down") != -1) {
+	if (player.ySpeed != 0) {
+		if (player.ySpeed < player.maxVelocity) {
+			player.ySpeed += 0.05
+		}
+
+		if(player.ySpeed > player.maxVelocity) {
+			player.ySpeed = player.maxVelocity
+		}
+	}
+
+	if (player.onFloor == true ||activeActions.indexOf("up") != -1) {
+		player.ySpeed = -5
+		player.onFloor = false
+	}
+
+	/*if (activeActions.indexOf("down") != -1) {
 		if (activeActions.indexOf("up") != -1) {
 			player.ySpeed = 0
 		} else {
@@ -227,7 +242,7 @@ function movePlayer() { //changes the player position according to it's speed an
 		}
 	} else {
 		player.ySpeed = 0
-	}
+	}*/
 
 	/*if (!player.onFloor) {
 		player.ySpeed += 1
@@ -239,7 +254,14 @@ function movePlayer() { //changes the player position according to it's speed an
 	//player.x += player.xSpeed
 	//player.y += player.ySpeed
 
-	nearCollision()
+	let collisions = nearCollision()
+
+	if(collisions.length) {
+		checkCollision(collisions)
+	} else {
+		player.x += player.xSpeed
+		player.y += player.ySpeed
+	}
 }
 
 
@@ -287,7 +309,9 @@ function nearCollision() { //finds all objects that could be in the way
 
 		if (player.ySpeed > 0) {
 			if (player.y + player.height == collisions[i][0][1]) {
+
 				player.ySpeed = 0
+				player.onFloor = true
 			}
 		} else if (player.ySpeed < 0) {
 			if (player.y == collisions[i][0][1] + collisions[i][1][1]) {
@@ -296,12 +320,7 @@ function nearCollision() { //finds all objects that could be in the way
 		}
 	}
 
-	if(collisions.length) {
-		checkCollision(collisions)
-	} else {
-		player.x += player.xSpeed
-		player.y += player.ySpeed
-	}
+	return collisions
 }
 
 function checkCollision(list) {
