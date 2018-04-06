@@ -48,7 +48,7 @@ let textures = {
 		textures[name].onload = function() {
 			loadCount++
 			if(loadCount == texturesList.length){
-				//draw()
+				draw()
 			}
 		}
 	}
@@ -82,6 +82,12 @@ let solidObjects = [
 	{
 		type: "image",
 		start: [120, 800],
+		size: [60, 60],
+		texture: textures.brick,
+	},
+	{
+		type: "image",
+		start: [800, 400],
 		size: [60, 60],
 		texture: textures.brick,
 	},
@@ -229,12 +235,11 @@ function movePlayer() { //changes the player position according to it's speed an
 
 	//for (var i )
 
-	if (activeActions.indexOf("space") != -1) {
-		nearCollision()
-	}
 
-	player.x += player.xSpeed
-	player.y += player.ySpeed
+	//player.x += player.xSpeed
+	//player.y += player.ySpeed
+
+	nearCollision()
 }
 
 
@@ -261,38 +266,52 @@ function nearCollision() { //finds all objects that could be in the way
 		if(maxPos[0] > solidObjects[i].start[0] || maxPos[0] > solidObjects[i].start[0] + solidObjects[i].size[0]) {
 		if(minPos[1] < solidObjects[i].start[1] || minPos[1] < solidObjects[i].start[1] + solidObjects[i].size[1]) {
 		if(maxPos[1] > solidObjects[i].start[1] || maxPos[1] > solidObjects[i].start[1] + solidObjects[i].size[1]) {
-			collisions.push(i)
+			let object = solidObjects[i]
+			collisions.push([object.start, object.size])
 		}
 		}
 		}
 		}
 	}
+
+	for (var i = 0; i < collisions.length; i++) {
+		if (player.xSpeed > 0) {
+			if (player.x + player.width == collisions[i][0][0]) {
+				player.xSpeed = 0
+			}
+		} else if (player.xSpeed < 0) {
+			if (player.x == collisions[i][0][0] + collisions[i][1][0]) {
+				player.xSpeed = 0
+			}
+		}
+
+		if (player.ySpeed > 0) {
+			if (player.y + player.height == collisions[i][0][1]) {
+				player.ySpeed = 0
+			}
+		} else if (player.ySpeed < 0) {
+			if (player.y == collisions[i][0][1] + collisions[i][1][1]) {
+				player.ySpeed = 0
+			}
+		}
+	}
+
 	if(collisions.length) {
-		console.log(collisions)
+		checkCollision(collisions)
+	} else {
+		player.x += player.xSpeed
+		player.y += player.ySpeed
 	}
 }
 
-function checkCollision(oldPos, newPos, list) {
+function checkCollision(list) {
 	//lines are expressed with the following syntax: [[x-starting point, y-starting point], [x-ending point, y-ending point]]
 
-	//let oldPos = [player.x, player.y]
-	//let newPos = [player.x + player.xSpeed, player.y + player.ySpeed]
+	let oldPos = [player.x, player.y]
+	let newPos = [player.x + player.xSpeed, player.y + player.ySpeed]
 
-	let xDirection	
-	let yDirection
-	if (player.xSpeed > 0) {
-		xDirection = 1 
-	} else {
-		xDirection = 0
-	}
-	if (player.ySpeed > 0) {
-		yDirection = 1 
-	} else {
-		yDirection = 0
-	}
-
-	xDirection = 0
-	yDirection = 0
+	let xDirection = 0
+	let yDirection = 0
 	if(oldPos[0] < newPos[0]) {
 		xDirection = 1
 	}
@@ -382,48 +401,80 @@ function checkCollision(oldPos, newPos, list) {
 	let yMultiplier
 	let finalMultiplier = false
 
+	/*if(yObjectCollisionList.length) {
+		console.log(yObjectCollisionList)
+	}*/
 
-	while (xObjectCollisionList.length != 0 && yObjectCollisionList.length != 0 && finalMultiplier === false) {
-		xMultiplier = Math.abs((xObjectCollisionList[0][0][0] - xCollisionLine[0][0])/(xDistance))
-		yMultiplier = Math.abs((yObjectCollisionList[0][0][1] - yCollisionLine[0][1])/(yDistance))
+	while ((xObjectCollisionList.length != 0 || yObjectCollisionList.length != 0) && finalMultiplier === false ) {
+		if (xObjectCollisionList.length) {
+			xMultiplier = Math.abs((xObjectCollisionList[0][0][0] - xCollisionLine[0][0])/(xDistance))
+		} else {
+			xMultiplier = 1
+		}
+		if (yObjectCollisionList.length) {
+			yMultiplier = Math.abs((yObjectCollisionList[0][0][1] - yCollisionLine[0][1])/(yDistance))
+		} else {
+			yMultiplier = 1
+		}
 
 		if (xMultiplier < yMultiplier) {
 			let tempXCollisionLine = [[xObjectCollisionList[0][0][0], xCollisionLine[0][1] + (yDistance * xMultiplier)], [xObjectCollisionList[0][0][0], xCollisionLine[1][1]  + (yDistance * xMultiplier)]]
-			console.log(tempXCollisionLine, xObjectCollisionList[0], "x")
+			//console.log(tempXCollisionLine, xObjectCollisionList[0], "x")
 			if (xObjectCollisionList[0][0][1] <= tempXCollisionLine[0][1] && xObjectCollisionList[0][1][1] >= tempXCollisionLine[1][1]
 				||
 				xObjectCollisionList[0][0][1] > tempXCollisionLine[0][1] && xObjectCollisionList[0][0][1] < tempXCollisionLine[1][1]
 				||
 				xObjectCollisionList[0][1][1] > tempXCollisionLine[0][1] && xObjectCollisionList[0][1][1] < tempXCollisionLine[1][1]) {
+
 				finalMultiplier = xMultiplier
 				player.xSpeed = 0
-				console.log ("finalMultiplier is x", finalMultiplier)
+				//console.log ("finalMultiplier is x", finalMultiplier)
 			} else {
 				xObjectCollisionList.shift()
 			}
 		} else if (xMultiplier > yMultiplier) {
 			let tempYCollisionLine = [[yCollisionLine[0][0] + (xDistance * yMultiplier), yObjectCollisionList[0][0][1]], [yCollisionLine[1][0] + (xDistance * yMultiplier), yObjectCollisionList[0][0][1]]]
-			console.log(tempYCollisionLine, yObjectCollisionList[0], "y")
+			//console.log(tempYCollisionLine, yObjectCollisionList[0], "y")
 			if (yObjectCollisionList[0][0][0] <= tempYCollisionLine[0][0] && yObjectCollisionList[0][1][0] >= tempYCollisionLine[1][0]
 				||
 				yObjectCollisionList[0][0][0] > tempYCollisionLine[0][0] && yObjectCollisionList[0][0][0] < tempYCollisionLine[1][0]
 				||
 				yObjectCollisionList[0][1][0] > tempYCollisionLine[0][0] && yObjectCollisionList[0][1][0] < tempYCollisionLine[1][0]) {
+
 				finalMultiplier = yMultiplier
 				player.ySpeed = 0
-				console.log ("finalMultiplier is y", finalMultiplier)
+				//console.log ("finalMultiplier is y", finalMultiplier)
 			} else {
 				yObjectCollisionList.shift()
 			}
 		}
+
+		if (isNaN(xMultiplier)) {
+			console.log(xObjectCollisionList[0][0][0], xCollisionLine[0][0], xDistance)
+		}
+
+		if (isNaN(yMultiplier)) {
+			console.log(yObjectCollisionList[0][0][1], yCollisionLine[0][1], yDistance)
+		}
+
+		
+		console.log("length", xObjectCollisionList.length, yObjectCollisionList.length)
+		console.log("dist", xDistance, yDistance)
+		console.log("mult", xMultiplier, yMultiplier)
+		console.log("speed", player.xSpeed, player.ySpeed)
 	}
 
 	if (!finalMultiplier) {
 		finalMultiplier = 1
 	}
 
+	player.x = oldPos[0] + finalMultiplier * (xDistance)
+	player.y = oldPos[1] + finalMultiplier * (yDistance)
+
+	return
 
 
+ 	/*
 
 	//test stuff start
 
@@ -530,10 +581,12 @@ function checkCollision(oldPos, newPos, list) {
 	c.lineTo(rightLine[1][0], rightLine[1][1])
 	c.stroke()
 	//test stuff end
+
+	*/
 }
 
 
-
+/*
 checkCollision([10, 10], [500, 500],
 	[
 		[
@@ -554,3 +607,4 @@ checkCollision([10, 10], [500, 500],
 		],
 	]
 )
+*/
