@@ -11,26 +11,25 @@ let gameRunning = true
 let pressedButtons = []
 let activeActions = []
 let player = {
-	width: 100,
-	height: 250,
-	x: 500,
-	y: 500,
+	width: 12,
+	height: 16,
+	x: 10,
+	y: 10,
 	xSpeed: 0,
 	ySpeed: 0,
 	onFloor: false,
-	maxVelocity: 10,
+	maxSpeed: 2,
 }
-const gameProperties = {
-	acceleration: function(x) {
-		return x * x 
-	}
+let gameProperties = {
+	sizeMultiplier: height / 240,
 }
 
 
 let textures = {
 	brick: "images/brick.png",
 	pause: "images/pause.png",
-	player: "images/player.png",
+	player: "images/mario.png",
+	background: "images/background.png",
 }
 
 
@@ -56,40 +55,49 @@ let textures = {
 
 let solidObjects = [
 	{
-		type: "rectangle",
-		start: [0, 800],
-		size: [1920, 25],
-		color: "#f00",
+		type: "blank",
+		start: [0 , 208],
+		size: [496 * 2, (240 - 208)],
 	},
 	{
-		type: "rectangle",
+		type: "blank",
+		start: [256 , 144],
+		size: [16, 16],
+	},
+	{
+		type: "blank",
+		start: [352, 80],
+		size: [16, 16],
+	},
+	{
+		type: "blank",
+		start: [320 , 144],
+		size: [16 * 5, 16],
+	},
+	{
+		type: "blank",
+		start: [448, 176],
+		size: [30, 15],
+	},
+	{
+		type: "blank",
+		start: [450 , 191],
+		size: [28, 17],
+	},
+	{
+		type: "image",
+		start: [50, 50],
+		size: [60, 60],
+		texture: textures.brick,
+	},
+]
+
+let otherObjects = [
+	{
+		type: "image",
 		start: [0, 0],
-		size: [30, 30],
-		color: "#00f",
-	},
-	{
-		type: "image",
-		start: [0, 500],
-		size: [60, 60],
-		texture: textures.brick,
-	},
-	{
-		type: "image",
-		start: [60, 800],
-		size: [60, 60],
-		texture: textures.brick,
-	},
-	{
-		type: "image",
-		start: [120, 800],
-		size: [60, 60],
-		texture: textures.brick,
-	},
-	{
-		type: "image",
-		start: [800, 400],
-		size: [60, 60],
-		texture: textures.brick,
+		size: [496, 240],
+		texture: textures.background,
 	},
 ]
 
@@ -146,12 +154,12 @@ document.onkeyup = function(info) {
 }
 
 function draw(){
+	let m = gameProperties.sizeMultiplier
 	c.clearRect(0, 0, canvas.width, canvas.height)
 
+	drawObjects(m)
 	c.imageSmoothingEnabled = false
-	c.drawImage(textures.player, player.x, player.y, player.width, player.height)
-
-	drawObjects()
+	c.drawImage(textures.player, player.x * m, player.y * m, player.width * m, player.height * m)
 
 	movePlayer()
 
@@ -164,24 +172,41 @@ function draw(){
 }
 
 function drawObjects() {
+	let m = gameProperties.sizeMultiplier
+	for (var i = 0; i < otherObjects.length; i++) {
+		var object = otherObjects[i]
+
+		if (object.type == "image") {
+			c.imageSmoothingEnabled = false
+			c.drawImage(object.texture, object.start[0] * m, object.start[1] * m, object.size[0] * m, object.size[1] * m)
+		} else if (object.type == "rectangle") {
+			c.beginPath();
+			c.moveTo(object.start[0] * m, object.start[1] * m * m)
+			c.lineTo(object.start[0] * m, object.start[1] * m + object.size[1] * m)
+			c.lineTo(object.start[0] * m + object.size[0] * m, object.start[1] * m + object.size[1] * m)
+			c.lineTo(object.start[0] * m + object.size[0] * m, object.start[1] * m)
+			c.lineTo(object.start[0] * m, object.start[1] * m)
+			c.fillStyle = object.color
+			c.fill()
+		}
+	}
 	for (var i = 0; i < solidObjects.length; i++) {
 		var object = solidObjects[i]
 
 		if (object.type == "image") {
 			c.imageSmoothingEnabled = false
-			c.drawImage(object.texture, object.start[0], object.start[1], object.size[0], object.size[1])
+			c.drawImage(object.texture, object.start[0] * m, object.start[1] * m, object.size[0] * m, object.size[1] * m)
 		} else if (object.type == "rectangle") {
 			c.beginPath();
-			c.moveTo(object.start[0], object.start[1])
-			c.lineTo(object.start[0], object.start[1] + object.size[1])
-			c.lineTo(object.start[0] + object.size[0], object.start[1] + object.size[1])
-			c.lineTo(object.start[0] + object.size[0], object.start[1])
-			c.lineTo(object.start[0], object.start[1])
+			c.moveTo(object.start[0] * m, object.start[1] * m)
+			c.lineTo(object.start[0] * m, object.start[1] * m + object.size[1] * m)
+			c.lineTo(object.start[0] * m + object.size[0] * m, object.start[1] * m + object.size[1] * m)
+			c.lineTo(object.start[0] * m + object.size[0] * m, object.start[1] * m)
+			c.lineTo(object.start[0] * m, object.start[1] * m)
 			c.fillStyle = object.color
 			c.fill()
 		}
 	}
-	//c.stroke()
 }
 
 function movePlayer() { //changes the player position according to it's speed and accelerates/deaccelerates the speed if direction buttons are/aren't pressed
@@ -189,71 +214,57 @@ function movePlayer() { //changes the player position according to it's speed an
 		if (activeActions.indexOf("left") != -1) {
 			player.xSpeed = 0
 		} else {
-			if (player.xSpeed != 5) {
-				player.xSpeed += -.08*player.xSpeed*player.xSpeed + 2.125
-				if (player.xSpeed > 5) {
-					player.xSpeed = 5
+			if (player.xSpeed != player.maxSpeed) {
+				if (player.onFloor) {
+					player.xSpeed += .15
+				} else {
+					player.xSpeed += .05
+				}
+				if (player.xSpeed > player.maxSpeed) {
+					player.xSpeed = player.maxSpeed
 				}
 			}
 		}
 	} else if (activeActions.indexOf("left") != -1) {
-		if (player.xSpeed != -5) {
-			player.xSpeed -= -.08*player.xSpeed*player.xSpeed + 2.125
-			if (player.xSpeed > 5) {
-				player.xSpeed = 5
+		if (player.xSpeed != -player.maxSpeed) {
+			if (player.onFloor) {
+				player.xSpeed -= .15
+			} else {
+				player.xSpeed -= .05
+			}
+			if (player.xSpeed < -player.maxSpeed) {
+				player.xSpeed = -player.maxSpeed
 			}
 		}
 	} else {
-		player.xSpeed = 0
+		if (player.xSpeed > 0) {
+			player.xSpeed -= .2
+			if (player.xSpeed < 0) {
+				player.xSpeed = 0
+			}
+		} else if (player.xSpeed < 0) {
+			player.xSpeed += .2
+			if (player.xSpeed > 0) {
+				player.xSpeed = 0
+			}
+		}
 	}
 
-	if (player.ySpeed != 0) {
-		if (player.ySpeed < player.maxVelocity) {
+
+	if (player.onFloor == true && activeActions.indexOf("up") != -1) {
+		player.ySpeed = -2.6
+	} else {
+		//if (player.ySpeed < player.maxSpeed) {
 			player.ySpeed += 0.05
-		}
-
-		if(player.ySpeed > player.maxVelocity) {
-			player.ySpeed = player.maxVelocity
-		}
+		/*}
+		if(player.ySpeed > player.maxSpeed) {
+			player.ySpeed = player.maxSpeed
+		}*/
 	}
-
-	if (player.onFloor == true ||activeActions.indexOf("up") != -1) {
-		player.ySpeed = -5
+	if (player.ySpeed != 0) {
 		player.onFloor = false
 	}
-
-	/*if (activeActions.indexOf("down") != -1) {
-		if (activeActions.indexOf("up") != -1) {
-			player.ySpeed = 0
-		} else {
-			if (player.ySpeed != 5) {
-				player.ySpeed += -.08*player.ySpeed*player.ySpeed + 2.125
-				if (player.ySpeed > 5) {
-					player.ySpeed = 5
-				}
-			}
-		}
-	} else if (activeActions.indexOf("up") != -1) {
-		if (player.ySpeed != -5) {
-			player.ySpeed -= -.08*player.ySpeed*player.ySpeed + 2.125
-			if (player.ySpeed > 5) {
-				player.ySpeed = 5
-			}
-		}
-	} else {
-		player.ySpeed = 0
-	}*/
-
-	/*if (!player.onFloor) {
-		player.ySpeed += 1
-	}*/
-
-	//for (var i )
-
-
-	//player.x += player.xSpeed
-	//player.y += player.ySpeed
-
+	
 	let collisions = nearCollision()
 
 	if(collisions.length) {
