@@ -22,6 +22,7 @@ let player = {
 }
 let gameProperties = {
 	sizeMultiplier: height / 240,
+	offset: 0,
 }
 
 
@@ -29,7 +30,8 @@ let textures = {
 	brick: "images/brick.png",
 	pause: "images/pause.png",
 	player: "images/mario.png",
-	background: "images/background.png",
+	background: "images/background1.png",
+	clouds: "images/clouds.png"
 }
 
 
@@ -84,15 +86,29 @@ let solidObjects = [
 		start: [450 , 191],
 		size: [28, 17],
 	},
-	{
+	/*{
 		type: "image",
 		start: [50, 50],
 		size: [60, 60],
 		texture: textures.brick,
-	},
+	},*/
 ]
 
 let otherObjects = [
+	{
+		type: "rectangle",
+		start: [0, 0],
+		size: [496, 240],
+		noOffset: true,
+		color: "#5C94FC",
+	},
+	{
+		type: "image",
+		start: [0, 0],
+		size: [496, 240],
+		customOffset: .5,
+		texture: textures.clouds,
+	},
 	{
 		type: "image",
 		start: [0, 0],
@@ -155,11 +171,12 @@ document.onkeyup = function(info) {
 
 function draw(){
 	let m = gameProperties.sizeMultiplier
+	let offset = gameProperties.offset * m
 	c.clearRect(0, 0, canvas.width, canvas.height)
 
 	drawObjects(m)
 	c.imageSmoothingEnabled = false
-	c.drawImage(textures.player, player.x * m, player.y * m, player.width * m, player.height * m)
+	c.drawImage(textures.player, offset + player.x * m, player.y * m, player.width * m, player.height * m)
 
 	movePlayer()
 
@@ -173,19 +190,29 @@ function draw(){
 
 function drawObjects() {
 	let m = gameProperties.sizeMultiplier
-	for (var i = 0; i < otherObjects.length; i++) {
-		var object = otherObjects[i]
+	let offset = gameProperties.offset * m
+	for (let i = 0; i < otherObjects.length; i++) {
+		let object = otherObjects[i]
+		let customOffset = 1
+		if (object.customOffset){
+			customOffset = object.customOffset
+		} else if (object.noOffset) {
+			customOffset = 0
+		}
 
 		if (object.type == "image") {
 			c.imageSmoothingEnabled = false
-			c.drawImage(object.texture, object.start[0] * m, object.start[1] * m, object.size[0] * m, object.size[1] * m)
+			c.drawImage(object.texture,	customOffset * offset + object.start[0] * m, object.start[1] * m, object.size[0] * m, object.size[1] * m)
 		} else if (object.type == "rectangle") {
+			if (object.noOffset) {
+
+			}
 			c.beginPath();
-			c.moveTo(object.start[0] * m, object.start[1] * m * m)
-			c.lineTo(object.start[0] * m, object.start[1] * m + object.size[1] * m)
-			c.lineTo(object.start[0] * m + object.size[0] * m, object.start[1] * m + object.size[1] * m)
-			c.lineTo(object.start[0] * m + object.size[0] * m, object.start[1] * m)
-			c.lineTo(object.start[0] * m, object.start[1] * m)
+			c.moveTo(customOffset * offset + object.start[0] * m , object.start[1] * m * m)
+			c.lineTo(customOffset * offset + object.start[0] * m, object.start[1] * m + object.size[1] * m)
+			c.lineTo(customOffset * offset + object.start[0] * m + object.size[0] * m, object.start[1] * m + object.size[1] * m)
+			c.lineTo(customOffset * offset + object.start[0] * m + object.size[0] * m, object.start[1] * m)
+			c.lineTo(customOffset * offset + object.start[0] * m, object.start[1] * m)
 			c.fillStyle = object.color
 			c.fill()
 		}
@@ -195,14 +222,14 @@ function drawObjects() {
 
 		if (object.type == "image") {
 			c.imageSmoothingEnabled = false
-			c.drawImage(object.texture, object.start[0] * m, object.start[1] * m, object.size[0] * m, object.size[1] * m)
+			c.drawImage(object.texture, offset + object.start[0] * m, object.start[1] * m, object.size[0] * m, object.size[1] * m)
 		} else if (object.type == "rectangle") {
 			c.beginPath();
-			c.moveTo(object.start[0] * m, object.start[1] * m)
-			c.lineTo(object.start[0] * m, object.start[1] * m + object.size[1] * m)
-			c.lineTo(object.start[0] * m + object.size[0] * m, object.start[1] * m + object.size[1] * m)
-			c.lineTo(object.start[0] * m + object.size[0] * m, object.start[1] * m)
-			c.lineTo(object.start[0] * m, object.start[1] * m)
+			c.moveTo(offset + object.start[0] * m, object.start[1] * m)
+			c.lineTo(offset + object.start[0] * m, object.start[1] * m + object.size[1] * m)
+			c.lineTo(offset + object.start[0] * m + object.size[0] * m, object.start[1] * m + object.size[1] * m)
+			c.lineTo(offset + object.start[0] * m + object.size[0] * m, object.start[1] * m)
+			c.lineTo(offset + object.start[0] * m, object.start[1] * m)
 			c.fillStyle = object.color
 			c.fill()
 		}
@@ -273,6 +300,14 @@ function movePlayer() { //changes the player position according to it's speed an
 		player.x += player.xSpeed
 		player.y += player.ySpeed
 	}
+
+	if (player.x > 350 && player.x + gameProperties.offset > 350) {
+		gameProperties.offset = -player.x + 350
+	}
+	if (player.x > 150 && player.x + gameProperties.offset < 150) {
+		gameProperties.offset = -player.x + 150
+	}
+
 }
 
 
