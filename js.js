@@ -2,6 +2,7 @@ var canvas = document.getElementById("game")
 var c = canvas.getContext("2d")
 var height = window.innerHeight
 var width = window.innerWidth
+//height *= .5
 canvas.height = height
 canvas.width = width
 
@@ -11,8 +12,9 @@ let gameRunning = true
 let pressedButtons = []
 let activeActions = []
 let player = {
-	width: 12,
-	height: 16,
+	exists: true,
+	width: 28,
+	height: 62,
 	x: 10,
 	y: 10,
 	xSpeed: 0,
@@ -21,22 +23,191 @@ let player = {
 	maxSpeed: 2,
 }
 let gameProperties = {
-	sizeMultiplier: height / 240,
+	sizeMultiplier: (height / 240),
 	offset: 0,
 }
 
 
-let textures = {
-	brick: "images/brick.png",
-	pause: "images/pause.png",
-	player: "images/mario.png",
-	background: "images/background1.png",
-	clouds: "images/clouds.png"
+let textures
+let solidObjects
+let otherObjects
+
+let levels = {
+	menu: {
+		textures: {
+			about: "images/about.png",
+			newgame: "images/newgame.png",
+			play: "images/play.png" 
+		},
+		solidObjects: [],
+		otherObjects: [
+			{
+				type: "image",
+				start: [50, 50],
+				size: [96, 32],
+				texture: "play",
+				click: {
+					button: 0,
+					func: function() {
+						gameRunning = false
+						load(levels.dungeon)
+					}
+				}
+			},
+		],
+		startFunc: function() {
+			player.exists = false
+		}
+	},
+	mario: {
+		startFunc: function() {
+			player.exists = true
+		},
+		textures: {
+			brick: "images/brick.png",
+			pause: "images/pause.png",
+			player: "images/player-forward.png",
+			background: "images/background1.png",
+			clouds: "images/clouds.png"
+		},
+		solidObjects: [
+			{
+				type: "blank",
+				start: [0 , 208],
+				size: [496 * 2, (240 - 208)],
+			},
+			{
+				type: "blank",
+				start: [256 , 144],
+				size: [16, 16],
+			},
+			{
+				type: "blank",
+				start: [352, 80],
+				size: [16, 16],
+			},
+			{
+				type: "blank",
+				start: [320 , 144],
+				size: [16 * 5, 16],
+			},
+			{
+				type: "blank",
+				start: [448, 176],
+				size: [34, 15],
+			},
+			{
+				type: "blank",
+				start: [450 , 191],
+				size: [28, 17],
+			},
+			{
+				type: "blank",
+				start: [0 , 0],
+				size: [0, 240],
+			},
+			{
+				type: "blank",
+				start: [496 * 2 , 0],
+				size: [0, 240],
+			},
+		],
+		otherObjects: [
+			{
+				type: "rectangle",
+				start: [0, 0],
+				size: [496, 240],
+				noOffset: true,
+				color: "#5C94FC",
+			},
+			{
+				type: "image",
+				start: [0, 0],
+				size: [496, 240],
+				customOffset: .5,
+				texture: "clouds",
+			},
+			{
+				type: "image",
+				start: [0, 0],
+				size: [496, 240],
+				texture: "background",
+			},
+			{
+				type: "rectangle",
+				start: [50, 50],
+				size: [50, 50],
+				color: "#0f0",
+				click: {
+					button: 0,
+					func: function() {
+						console.log("hellooo")
+					}
+				}
+			}
+		]
+	},
+	dungeon: {
+		startFunc: function() {
+			player.exists = true
+		},
+		textures: {
+			bg: "images/dungeon/basicbackground.png",
+			player: "images/player-forward.png",
+			pause: "images/pause.png"
+		},
+		solidObjects: [
+			{
+				type: "blank",
+				start: [0, 202],
+				size: [1000, 0],
+			}
+		],
+		otherObjects: [
+			{
+				type: "image",
+				start: [0, 0],
+				size: [60, 240],
+				texture: "bg"
+			},
+			{
+				type: "image",
+				start: [60 * 1, 0],
+				size: [60, 240],
+				texture: "bg"
+			},
+			{
+				type: "image",
+				start: [120, 0],
+				size: [60, 240],
+				texture: "bg"
+			},
+			{
+				type: "image",
+				start: [180, 0],
+				size: [60, 240],
+				texture: "bg"
+			},
+			{
+				type: "image",
+				start: [240, 0],
+				size: [60, 240],
+				texture: "bg"
+			}
+		]
+	}
 }
 
+//loads textures and starts run() after that
+function load(level) {
+	textures = level.textures
+	solidObjects = level.solidObjects
+	otherObjects = level.otherObjects
 
-//loads textures and starts draw() after that
-;(function() {
+	if (level.startFunc){
+		level.startFunc()
+	}
+
 	let loadCount = 0
 	let texturesList = Object.getOwnPropertyNames(textures)
 	for (var i = 0; i < texturesList.length; i++) {
@@ -49,73 +220,28 @@ let textures = {
 		textures[name].onload = function() {
 			loadCount++
 			if(loadCount == texturesList.length){
-				draw()
+				for (var j = 0; j < solidObjects.length; j++) {
+					if (solidObjects[j].type == "image") {
+						let textureName = solidObjects[j].texture
+						solidObjects[j].texture = textures[textureName]
+					}
+				}
+				for (var j = 0; j < otherObjects.length; j++) {
+					if (otherObjects[j].type == "image") {
+						let textureName = otherObjects[j].texture
+						otherObjects[j].texture = textures[textureName]
+					}
+				}
+				console.log("run")
+				gameRunning = true
+				run()
 			}
 		}
 	}
-})()
+}
 
-let solidObjects = [
-	{
-		type: "blank",
-		start: [0 , 208],
-		size: [496 * 2, (240 - 208)],
-	},
-	{
-		type: "blank",
-		start: [256 , 144],
-		size: [16, 16],
-	},
-	{
-		type: "blank",
-		start: [352, 80],
-		size: [16, 16],
-	},
-	{
-		type: "blank",
-		start: [320 , 144],
-		size: [16 * 5, 16],
-	},
-	{
-		type: "blank",
-		start: [448, 176],
-		size: [30, 15],
-	},
-	{
-		type: "blank",
-		start: [450 , 191],
-		size: [28, 17],
-	},
-	/*{
-		type: "image",
-		start: [50, 50],
-		size: [60, 60],
-		texture: textures.brick,
-	},*/
-]
+load(levels.menu)
 
-let otherObjects = [
-	{
-		type: "rectangle",
-		start: [0, 0],
-		size: [496, 240],
-		noOffset: true,
-		color: "#5C94FC",
-	},
-	{
-		type: "image",
-		start: [0, 0],
-		size: [496, 240],
-		customOffset: .5,
-		texture: textures.clouds,
-	},
-	{
-		type: "image",
-		start: [0, 0],
-		size: [496, 240],
-		texture: textures.background,
-	},
-]
 
 
 //returns what action the keyCode represents
@@ -151,7 +277,7 @@ document.onkeydown = function(info) {
 				activeActions.push(action)
 				if(action == "pause") {
 					gameRunning = gameRunning * (-1) + 1
-					draw()
+					run()
 				}
 			}
 		}
@@ -169,52 +295,64 @@ document.onkeyup = function(info) {
 	}
 }
 
-function draw(){
-	let m = gameProperties.sizeMultiplier
-	let offset = gameProperties.offset * m
-	c.clearRect(0, 0, canvas.width, canvas.height)
+document.onpointerup = function(info) {
+	if (info.target.id == "game") {
+		for (var i = 0; i < otherObjects.length; i++) {
+			if (otherObjects[i].click) {
+				if (otherObjects[i].click.button == info.button) {
+					if (otherObjects[i].start[0] * gameProperties.sizeMultiplier + info.target.offsetLeft < info.x && 
+						otherObjects[i].start[0] * gameProperties.sizeMultiplier + otherObjects[i].size[0] * gameProperties.sizeMultiplier + info.target.offsetLeft > info.x &&
+						otherObjects[i].start[1] * gameProperties.sizeMultiplier + info.target.offsetLeft < info.y && 
+						otherObjects[i].start[1] * gameProperties.sizeMultiplier + otherObjects[i].size[1] * gameProperties.sizeMultiplier + info.target.offsetLeft > info.y) {
+						otherObjects[i].click.func()
+					}
+				}
+			}
+		}
+	}
+}
 
-	drawObjects(m)
-	c.imageSmoothingEnabled = false
-	c.drawImage(textures.player, offset + player.x * m, player.y * m, player.width * m, player.height * m)
-
-	movePlayer()
-
+function run(){
 	if (gameRunning) {
-		window.requestAnimationFrame(draw)
-	} else {
+		let m = gameProperties.sizeMultiplier
+		let offset = gameProperties.offset * m
+		c.clearRect(0, 0, canvas.width, canvas.height)
+	
+		drawObjects(m)
+
+		if (player.exists) {
+			c.imageSmoothingEnabled = false
+			c.drawImage(textures.player, offset + player.x * m, player.y * m, player.width * m, player.height * m)
+	
+			movePlayer()
+		}
+
+		window.requestAnimationFrame(run)
+	} else if (player.exists) {
 		c.imageSmoothingEnabled = false
 		c.drawImage(textures.pause, width/2, height/2)
 	}
 }
 
 function drawObjects() {
+	console.log("frame")
+
 	let m = gameProperties.sizeMultiplier
 	let offset = gameProperties.offset * m
 	for (let i = 0; i < otherObjects.length; i++) {
 		let object = otherObjects[i]
-		let customOffset = 1
+		let offsetMultiply = 1
 		if (object.customOffset){
-			customOffset = object.customOffset
+			offsetMultiply = object.customOffset
 		} else if (object.noOffset) {
-			customOffset = 0
+			offsetMultiply = 0
 		}
 
 		if (object.type == "image") {
 			c.imageSmoothingEnabled = false
-			c.drawImage(object.texture,	customOffset * offset + object.start[0] * m, object.start[1] * m, object.size[0] * m, object.size[1] * m)
+			c.drawImage(object.texture,	offsetMultiply * offset + object.start[0] * m, object.start[1] * m, object.size[0] * m, object.size[1] * m)
 		} else if (object.type == "rectangle") {
-			if (object.noOffset) {
-
-			}
-			c.beginPath();
-			c.moveTo(customOffset * offset + object.start[0] * m , object.start[1] * m * m)
-			c.lineTo(customOffset * offset + object.start[0] * m, object.start[1] * m + object.size[1] * m)
-			c.lineTo(customOffset * offset + object.start[0] * m + object.size[0] * m, object.start[1] * m + object.size[1] * m)
-			c.lineTo(customOffset * offset + object.start[0] * m + object.size[0] * m, object.start[1] * m)
-			c.lineTo(customOffset * offset + object.start[0] * m, object.start[1] * m)
-			c.fillStyle = object.color
-			c.fill()
+			drawRectangle(object.start[0], object.start[1], object.size[0], object.color, object.size[1], m, offset, offsetMultiply)
 		}
 	}
 	for (var i = 0; i < solidObjects.length; i++) {
@@ -234,6 +372,20 @@ function drawObjects() {
 			c.fill()
 		}
 	}
+}
+
+function drawRectangle(startX, startY, width, color, height, multiplier, offset, offsetMultiply) {
+	if (isNaN(offsetMultiply)) {
+		offsetMultiply = 1
+	}
+	c.beginPath();
+	c.moveTo(offsetMultiply * offset + startX * multiplier, startY * multiplier)
+	c.lineTo(offsetMultiply * offset + startX * multiplier, startY * multiplier + height * multiplier)
+	c.lineTo(offsetMultiply * offset + startX * multiplier + width * multiplier, startY * multiplier + height * multiplier)
+	c.lineTo(offsetMultiply * offset + startX * multiplier + width * multiplier, startY * multiplier)
+	c.lineTo(offsetMultiply * offset + startX * multiplier, startY * multiplier)
+	c.fillStyle = color
+	c.fill()
 }
 
 function movePlayer() { //changes the player position according to it's speed and accelerates/deaccelerates the speed if direction buttons are/aren't pressed
