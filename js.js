@@ -21,6 +21,34 @@ let player = {
 	ySpeed: 0,
 	onFloor: false,
 	maxSpeed: 2,
+	stepCounter: 0,
+	texture: function() {
+		if (player.onFloor) {
+			if (player.xSpeed == 0) {
+				return textures.player
+			} else if (player.xSpeed > 0) { //0-9, 10-20, 21-36, 37-47
+				if (player.stepCounter > 47) {
+					player.stepCounter %= 47
+				}
+				if (player.stepCounter <= 9) {
+					return textures.player1
+				} else if (player.stepCounter > 9 && player.stepCounter <= 20) {
+					return textures.player2
+				} else if (player.stepCounter > 20 && player.stepCounter <= 36) {
+					return textures.player3
+				} else if (player.stepCounter > 36) {
+					return textures.player4
+				}
+			} else {
+				player.stepCounter = 0
+				return textures.player
+			}
+			console.log(player.xSpeed)
+			return textures.player
+		} else {
+			return textures.player
+		}
+	}
 }
 let gameProperties = {
 	sizeMultiplier: (height / 240),
@@ -67,6 +95,10 @@ let levels = {
 			brick: "images/brick.png",
 			pause: "images/pause.png",
 			player: "images/player-forward.png",
+			player1: "images/player-1.png",
+			player2: "images/player-2.png",
+			player3: "images/player-3.png",
+			player4: "images/player-4.png",
 			background: "images/background1.png",
 			clouds: "images/clouds.png"
 		},
@@ -153,7 +185,12 @@ let levels = {
 		},
 		textures: {
 			bg: "images/dungeon/basicbackground.png",
+			pillar: "images/dungeon/pillar.png",
 			player: "images/player-forward.png",
+			player1: "images/player-1.png",
+			player2: "images/player-2.png",
+			player3: "images/player-3.png",
+			player4: "images/player-4.png",
 			pause: "images/pause.png"
 		},
 		solidObjects: [
@@ -193,6 +230,12 @@ let levels = {
 				start: [240, 0],
 				size: [60, 240],
 				texture: "bg"
+			},
+			{
+				type: "image",
+				start: [240, 0],
+				size: [30, 202],
+				texture: "pillar"
 			}
 		]
 	}
@@ -322,7 +365,7 @@ function run(){
 
 		if (player.exists) {
 			c.imageSmoothingEnabled = false
-			c.drawImage(textures.player, offset + player.x * m, player.y * m, player.width * m, player.height * m)
+			c.drawImage(player.texture(), offset + player.x * m, player.y * m, player.width * m, player.height * m)
 	
 			movePlayer()
 		}
@@ -433,17 +476,14 @@ function movePlayer() { //changes the player position according to it's speed an
 	if (player.onFloor == true && activeActions.indexOf("up") != -1) {
 		player.ySpeed = -2.6
 	} else {
-		//if (player.ySpeed < player.maxSpeed) {
-			player.ySpeed += 0.05
-		/*}
-		if(player.ySpeed > player.maxSpeed) {
-			player.ySpeed = player.maxSpeed
-		}*/
+		player.ySpeed += 0.05
 	}
+
 	if (player.ySpeed != 0) {
 		player.onFloor = false
 	}
 	
+
 	let collisions = nearCollision()
 
 	if(collisions.length) {
@@ -452,6 +492,8 @@ function movePlayer() { //changes the player position according to it's speed an
 		player.x += player.xSpeed
 		player.y += player.ySpeed
 	}
+
+	player.stepCounter += player.xSpeed
 
 	if (player.x > 350 && player.x + gameProperties.offset > 350) {
 		gameProperties.offset = -player.x + 350
