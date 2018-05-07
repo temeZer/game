@@ -51,7 +51,7 @@ let player = {
 	}
 }
 let gameProperties = {
-	sizeMultiplier: (height / 240),
+	sizeMultiplier: (height / 300),
 	offset: 0,
 }
 
@@ -59,6 +59,7 @@ let gameProperties = {
 let textures
 let solidObjects
 let otherObjects
+let functionAreas
 
 let levels = {
 	menu: {
@@ -238,6 +239,106 @@ let levels = {
 				texture: "pillar"
 			}
 		]
+	},
+	dungeonDEV: {
+		startFunc: function() {
+			player.exists = true
+		},
+		textures: {
+			pause: "images/pause.png",
+			player: "images/player-forward.png",
+			player1: "images/player-1.png",
+			player2: "images/player-2.png",
+			player3: "images/player-3.png",
+			player4: "images/player-4.png",
+		},
+		solidObjects: [
+			{
+				type: "rectangle",
+				start: [131, 187],
+				size: [91, 14],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [274, 162],
+				size: [12, 19],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [318, 97],
+				size: [69, 11],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [290, 177],
+				size: [5, 1],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [340, 0],
+				size: [24, 108],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [328, 172],
+				size: [85, 14],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [455, 80],
+				size: [25, 187],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [612, 137],
+				size: [51, 13],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [0, 267],
+				size: [1500, 2],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [0, 0],
+				size: [2, 300],
+				color: "#000000",
+			},
+			{
+				type: "rectangle",
+				start: [1500, 0],
+				size: [2, 300],
+				color: "#000000",
+			}
+		],
+		otherObjects: [
+
+		],
+		functionAreas: [
+			{
+				start: [0, 0],
+				size: [0, 0],
+				func: function() {
+					console.log("area function")
+				}
+			},
+			{
+				start: [480, 257],
+				size: [500, 10],
+				func: function() {
+					console.log("ded")
+				}
+			}
+		]
 	}
 }
 
@@ -246,6 +347,11 @@ function load(level) {
 	textures = level.textures
 	solidObjects = level.solidObjects
 	otherObjects = level.otherObjects
+	if (level.functionAreas) {
+		functionAreas = level.functionAreas
+	} else {
+		functionAreas = false
+	}
 
 	if (level.startFunc){
 		level.startFunc()
@@ -283,7 +389,7 @@ function load(level) {
 	}
 }
 
-load(levels.menu)
+load(levels.dungeonDEV)
 
 
 
@@ -368,6 +474,13 @@ function run(){
 			c.drawImage(player.texture(), offset + player.x * m, player.y * m, player.width * m, player.height * m)
 	
 			movePlayer()
+		}
+		if (functionAreas) {
+			for (var i = 0; i < functionAreas.length; i++) {
+				if (checkIfPlayerInArea(functionAreas[i].start, functionAreas[i].size)) {
+					functionAreas[i].func()
+				}
+			}
 		}
 
 		window.requestAnimationFrame(run)
@@ -474,7 +587,7 @@ function movePlayer() { //changes the player position according to it's speed an
 
 
 	if (player.onFloor == true && activeActions.indexOf("up") != -1) {
-		player.ySpeed = -2.6
+		player.ySpeed = -2.9
 	} else {
 		player.ySpeed += 0.05
 	}
@@ -503,7 +616,6 @@ function movePlayer() { //changes the player position according to it's speed an
 	}
 
 }
-
 
 function nearCollision() { //finds all objects that could be in the way
 	let minPos = [player.x, player.y]
@@ -563,7 +675,7 @@ function nearCollision() { //finds all objects that could be in the way
 	return collisions
 }
 
-function checkCollision(list) {
+function checkCollision(list) { //stops player from moving throught walls/floors/ceilings
 	//lines are expressed with the following syntax: [[x-starting point, y-starting point], [x-ending point, y-ending point]]
 
 	let oldPos = [player.x, player.y]
@@ -578,7 +690,7 @@ function checkCollision(list) {
 		yDirection = 1
 	}
 
-	//the sides of the player that are can posibbly collide
+	//the sides of the player that can posibbly collide
 	let xCollisionLine
 	let yCollisionLine
 
@@ -593,7 +705,7 @@ function checkCollision(list) {
 		yCollisionLine = [[oldPos[0], oldPos[1]], [oldPos[0] + player.width, oldPos[1]]]
 	}
 
-	//the sides of the objects that are can posibbly collide
+	//the sides of the objects that can posibbly collide
 	let xObjectCollisionList = []
 	let yObjectCollisionList = []
 	
@@ -733,5 +845,18 @@ function checkCollision(list) {
 	player.x = oldPos[0] + finalMultiplier * (xDistance)
 	player.y = oldPos[1] + finalMultiplier * (yDistance)
 
-	return
+	return 
+}
+
+function checkIfPlayerInArea(start, size) { //checks if player is inside an area
+	if (player.x < start[0] && player.x + player.width >  start[0]
+		|| player.x < start[0] + size[0] && player.x + player.width >  start[0] + size[0]
+		|| player.x > start[0] && player.x + player.width < start[0] + size[0]) {
+		if (player.y < start[1] && player.y + player.height >  start[1]
+			|| player.y < start[1] + size[1] && player.y + player.height >  start[1] + size[1]
+			|| player.y > start[1] && player.y + player.height < start[1] + size[1]) {
+			return true
+		}
+	}
+	return false
 }
